@@ -16,19 +16,30 @@ with open('dat3.txt','r') as f:
 data3 = data3.split('\n')
 data3.remove('')
 
-X = 2.**np.arange(1, len(data1)+1)
+with open('dat4.txt','r') as f:
+	data4 = f.read()
+data4 = data4.split('\n')
+data4.remove('')
+
+X = 2.**np.arange(len(data1))
 Y1 = [float(i) for i in data1]
 Y2 = [float(i) for i in data2]
 Y3 = [float(i) for i in data3]
+Y4 = [float(i) for i in data4]
+
 plt.scatter(X, Y1)
 plt.scatter(X, Y2)
 plt.scatter(X, Y3)
+plt.scatter(X, Y4)
+
 plt.plot(X, Y1, label='original')
-plt.plot(X, Y2, label='opt1')
-plt.plot(X, Y3, label='opt2')
+plt.plot(X, Y2, label='loop')
+plt.plot(X, Y3, label='block')
+plt.plot(X, Y4, label='recursion')
+
 plt.xlabel('n')
 plt.ylabel('time (in microseconds)')
 plt.title('Time taken for matrix multiplication')
 plt.legend()
-# plt.save('plot1.png')
-plt.show()
+plt.savefig('plot.png')
+# plt.show()
