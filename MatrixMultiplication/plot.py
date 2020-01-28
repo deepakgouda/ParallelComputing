@@ -49,7 +49,7 @@ plt.plot(X, Y4, label='recursion')
 plt.xlabel('n')
 # x_ticks = ['-o0', '-o1', '-o2', '-o3']
 # plt.xticks(range(len(x_ticks)), x_ticks)
-plt.xlabel('Compile options')
+plt.xlabel('dimension(n)')
 plt.ylabel('time (in microseconds)')
 plt.title('Time taken for matrix multiplication')
 plt.legend()
