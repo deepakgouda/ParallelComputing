@@ -109,13 +109,14 @@ int main(int argc, char const *argv[])
 	ios_base::sync_with_stdio(false);
 	srand(time(0));
 	int s;
-	ofstream file1, file2, file3, file4;
-	file1.open("dat1.txt");
-	file2.open("dat2.txt");
-	file3.open("dat3.txt");
-	file4.open("dat4.txt");
+	ofstream file0, file1, file2, file3, file4;
+	file0.open("dat0.txt", ios_base::app);
+	file1.open("dat1.txt", ios_base::app);
+	file2.open("dat2.txt", ios_base::app);
+	file3.open("dat3.txt", ios_base::app);
+	file4.open("dat4.txt", ios_base::app);
 
-	for (int n = 1; n <= 8; n *= 2)
+	for (int n = 1; n <= 4096; n *= 2)
 	{
 		int **a = new int *[n];
 		int **b = new int *[n];
@@ -134,6 +135,14 @@ int main(int argc, char const *argv[])
 				b[i][j] = rand() % MAX;
 			}
 		memset(c, n);
+
+		// Theoretical estimates
+		// CPU MHz : 2100.212 
+		// CPU max MHz : 3800.0000 
+		// CPU min MHz : 800.0000
+		long double totalOps = 2*n*n*n;
+		long double time = totalOps / (800 * 1e6);
+		file0 << time << endl;
 
 		auto start = high_resolution_clock::now();
 		for (int i = 0; i < n; ++i)
