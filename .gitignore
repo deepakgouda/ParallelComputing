@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+.vscode
+dat?.txt
+plot.png
