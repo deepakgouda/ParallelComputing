@@ -2,12 +2,9 @@
 // mpiexec -n 4 a.out
 #include <mpi.h>
 #include <stdio.h>
-
-    int
-    main(int argc, char **argv) {
-  // Initialize the MPI environment. The two arguments to MPI Init are not
-  // currently used by MPI implementations, but are there in case future
-  // implementations might need the arguments.
+#include <stdlib.h>
+int main(int argc, char **argv) 
+{
   MPI_Init(NULL, NULL);
 
   // Get the number of processes
@@ -22,7 +19,7 @@
   int count = 1;
   int destination = (world_rank + 1) % world_size;
   int tag = 0;
-  MPI_Send(&data, count, MPI_INT, destination, tag, MPI_COMM_WORLD);
+  MPI_Ssend(&data, count, MPI_INT, destination, tag, MPI_COMM_WORLD); // Stuck in deadlock
   printf("Processor %d : Sent data %d to processor %d\n", world_rank, data, destination);
 
   int source = (world_rank==0?world_size-1:world_rank-1) % world_size;
