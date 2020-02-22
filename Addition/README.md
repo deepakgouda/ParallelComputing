@@ -10,4 +10,4 @@ Process `A` splits `n` numbers into `2` parts of size `n/2` each and distributes
 `MPI_Reduce` is used along with `MPI_SUM` operation to calculate the final sum.
 
 The plot of `n` vs `time taken` for the three methods is as follows : 
-![](Plot.png)
+![](final_plot.png)
