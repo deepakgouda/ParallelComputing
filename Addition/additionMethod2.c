@@ -16,9 +16,12 @@ int main(int argc, char **argv)
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    int n = 8, count = n / world_size, recv, sum = 0;
+    int n = atoi(argv[1]), count = n / world_size, recv, sum = 0;
     int *arr;
 
+    double start, stop;
+
+    start = MPI_Wtime();
     // Distribute data
     if (rank == 0)
     {
@@ -80,7 +83,7 @@ int main(int argc, char **argv)
         {
             int src = rank + x / 2;
             MPI_Recv(&recv, 1, MPI_INT, src, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            printf("Process %d received data %d from process %d\n", rank, recv, src);
+            // printf("Process %d received data %d from process %d\n", rank, recv, src);
             sum += recv;
         }
         x *= 2;
@@ -88,9 +91,15 @@ int main(int argc, char **argv)
 
     if (rank == 0)
     {
-        printf("Full Sum: %d\n", sum);
+        // printf("Full Sum: %d\n", sum);
     }
 
     // Finalize the MPI environment.
     MPI_Finalize();
+    stop = MPI_Wtime();
+
+    if (rank == 0)
+    {
+        printf("%1.5f\n", (stop - start));
+    }
 }

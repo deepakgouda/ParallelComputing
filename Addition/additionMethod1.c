@@ -13,12 +13,16 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
     // Get the rank of the process
-    int world_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    double start, stop;
 
     int *arr;
-    int n = 8, p = world_size, count = n/p, tag = 0;
-    if(world_rank == 0)
+    int n = atoi(argv[1]), p = world_size, count = n / p, tag = 0;
+
+    start = MPI_Wtime();
+    if(rank == 0)
     {
         // Allocating and initializing array
         arr = (int *)malloc(n*sizeof(int));
@@ -58,7 +62,7 @@ int main(int argc, char **argv)
                 MPI_STATUS_IGNORE);
             sum+=recv;
         }
-        printf("Sum = %d\n", sum);
+        // printf("Sum = %d\n", sum);
     }
     else
     {
@@ -89,9 +93,11 @@ int main(int argc, char **argv)
             tag,
             MPI_COMM_WORLD);
     }
-    
-    // MPI_Reduce();
-    // MPI_WorldClock()
-
     MPI_Finalize();
+    stop = MPI_Wtime();
+
+    if(rank == 0)
+    {
+        printf("%1.5f\n", (stop-start));
+    }
 }
