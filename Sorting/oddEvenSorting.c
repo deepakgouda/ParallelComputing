@@ -36,6 +36,9 @@ int main(int argc, char **argv)
     int n = world_size*2, source, dest;
     int *arr;
 
+    double start, stop;
+
+    start = MPI_Wtime();
     if (rank == 0)
     {
         arr = (int *)malloc(n * sizeof(int));
@@ -86,9 +89,14 @@ int main(int argc, char **argv)
 
     if(!rank)
     {
-        display(arr, n);
+        // display(arr, n);
     }
 
     // Finalize the MPI environment.
     MPI_Finalize();
+    stop = MPI_Wtime();
+    if(!rank)
+    {
+        printf("%1.5f\n", (stop-start));
+    }
 }
