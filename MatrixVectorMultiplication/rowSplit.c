@@ -15,7 +15,7 @@ void display(int rank, int *arr, int n)
 int **allocate2D(int m, int n)
 {
     int *data = (int *)malloc(m * n * sizeof(int));
-    int **arr = (int **)malloc(m * sizeof(int));
+    int **arr = (int **)malloc(m * sizeof(int *));
     for (int i = 0; i < m; i++)
     {
         arr[i] = &(data[i * n]);
@@ -61,8 +61,9 @@ int main(int argc, char **argv)
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    int m = 8, n = 8;
+    int m = atoi(argv[1]), n = atoi(argv[1]);
     int *all_x = NULL;
+    double start, stop;
 
     all_x = allocate1D(n);
     initialize1D(all_x, n, 0);
@@ -73,6 +74,7 @@ int main(int argc, char **argv)
     int *x = allocate1D(n/world_size);
     initialize1D(x, n/world_size, 1);
 
+    start = MPI_Wtime();
     // Scatter data x to all processes
     MPI_Scatter(x,                  // Send data
                 n / world_size,     // Send count
@@ -106,12 +108,17 @@ int main(int argc, char **argv)
         }
     }
     
-    printf("Process %d : \n", rank);
+    // printf("Process %d : \n", rank);
     for (int i = 0; i < m/world_size; i++)
     {
-        printf("%d : %d\n", i, b[i]);
+        // printf("%d : %d\n", i, b[i]);
     }
     
     // Finalize the MPI environment.
     MPI_Finalize();
+    stop = MPI_Wtime();
+    if(!rank)
+    {
+        printf("%1.5f\n", (stop-start));
+    }
 }

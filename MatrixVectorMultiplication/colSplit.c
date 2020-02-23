@@ -28,7 +28,7 @@ void display2D(int rank, int **arr, int m, int n)
 int **allocate2D(int m, int n)
 {
     int *data = (int *)malloc(m * n * sizeof(int));
-    int **arr = (int **)malloc(m * sizeof(int));
+    int **arr = (int **)malloc(m * sizeof(int *));
     for (int i = 0; i < m; i++)
     {
         arr[i] = &(data[i * n]);
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    int m = 16, n = 16, tag = 0;
+    int m = atoi(argv[1]), n = atoi(argv[1]), tag = 0;
 
     int **A = allocate2D(m, n / world_size);
     initialize2D(A, m, n / world_size, 1);
@@ -84,6 +84,10 @@ int main(int argc, char **argv)
 
     int *b = allocate1D(m);
     initialize1D(b, m, 0);
+
+    double start, stop;
+
+    start = MPI_Wtime();
 
     for (int i = 0; i < m ; i++)
     {
@@ -108,9 +112,14 @@ int main(int argc, char **argv)
     {
         for (int i = 0; i < m; i++)
         {
-            printf("%d : %d\n", i, all_sum[i]);
+            // printf("%d : %d\n", i, all_sum[i]);
         }
     }
     // Finalize the MPI environment.
     MPI_Finalize();
+    stop = MPI_Wtime();
+    if (!rank)
+    {
+        printf("%1.5f\n", (stop - start));
+    }
 }

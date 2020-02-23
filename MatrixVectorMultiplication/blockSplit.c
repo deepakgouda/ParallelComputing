@@ -37,7 +37,7 @@ void display2D(int rank, int **arr, int m, int n)
 int **allocate2D(int m, int n)
 {
     int *data = (int *)malloc(m * n * sizeof(int));
-    int **arr = (int **)malloc(m * sizeof(int));
+    int **arr = (int **)malloc(m * sizeof(int *));
     for (int i = 0; i < m; i++)
     {
         arr[i] = &(data[i * n]);
@@ -83,9 +83,10 @@ int main(int argc, char **argv)
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    int m = 8, n = 4, m1, n1, tag = 0;
-    m1 = (int)(sqrt(world_size));
-    n1 = (int)(sqrt(world_size));
+    int m = atoi(argv[1]), n = atoi(argv[1]), m1, n1, tag = 0;
+    double start, stop;
+    m1 = (int)(m/sqrt(world_size));
+    n1 = (int)(n/sqrt(world_size));
 
     int **A = allocate2D(m1, n1);
     initialize2D(A, m1, n1, 1);
@@ -96,7 +97,9 @@ int main(int argc, char **argv)
     int *b = allocate1D(m1);
     initialize1D(b, m1, 0);
 
-    // Split MPI_COMM_WORLD into m/sqrt(p) number of row
+    start = MPI_Wtime();
+
+    // Split MPI_COMM_WORLD into sqrt(p) number of row
     // communicators and after computation of each matrix 
     // block vector multiplication reduce the vector along
     // row communicators to get the sum
@@ -131,14 +134,19 @@ int main(int argc, char **argv)
                 MPI_SUM, // operation
                 row_comm);
 
-    printf("Row rank : %d\n", row_rank);
+    // printf("Row rank : %d\n", row_rank);
     for (int i = 0; i < m1; i++)
     {
-        printf("%d : %d\n", i, all_sum[i]);
+        // printf("%d : %d\n", i, all_sum[i]);
     }
 
     MPI_Comm_free(&row_comm);
 
     // Finalize the MPI environment.
     MPI_Finalize();
+    stop = MPI_Wtime();
+    if (!rank)
+    {
+        printf("%1.5f\n", (stop - start));
+    }
 }
