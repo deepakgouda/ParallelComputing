@@ -9,7 +9,7 @@ void display1D(int rank, float *arr, int n)
 	printf("Process %d :\n", rank);
 	for (int i = 0; i < n; i++)
 	{
-		printf("%.1f ", arr[i]);
+		printf("%.3f ", arr[i]);
 	}
 	printf("\n");
 }
@@ -21,7 +21,7 @@ void display2D(int rank, float **arr, int m, int n)
 	{
 		for (int j = 0; j < n; j++)
 		{
-			printf("%.1f ", arr[i][j]);
+			printf("%.3f ", arr[i][j]);
 		}
 		printf("\n");
 	}
@@ -45,7 +45,6 @@ float initialize2D(float **arr, int m, int n)
 	{
 		for (int j = 0; j < n; j++)
 		{
-			// arr[i][j] = 2*((i)*n + (j+1));
 			arr[i][j] = rand() % MAX;
 		}
 	}
@@ -78,12 +77,11 @@ int main(int argc, char **argv)
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	srand(17);
+	srand(7);
 	int m = 10, n = 10, p = world_size, count = m/p;
 
 	float **a = allocate2D(m, n);
 	initialize2D(a, m, n);
-	display2D(rank, a, m, n);
 
 	for (int row = 0; row < m; row++)
 	{
@@ -102,17 +100,6 @@ int main(int argc, char **argv)
 				root[j] = a[row][j];
 			}
 			
-			if(row == 2)
-			{
-				printf("-------------------------\n");
-				for (int j = 0; j < n; j++)
-				{
-					printf("%f ", root[j]);
-				}
-				printf("\n");
-				printf("-------------------------\n");
-			}
-
 			for (int i = 0; i < p; i++)
 			{
 				if (i != rank)
@@ -139,30 +126,27 @@ int main(int argc, char **argv)
 				MPI_STATUS_IGNORE);
 		}
 
-		if(!rank)
+		for (int j = 0; j < n; j++)
 		{
-			printf("Row : %d\n", row);
-			for (int j = 0; j < n; j++)
-			{
-				printf("%.1f ", root[j]);
-			}
-			printf("\n");
+			a[row][j] = root[j];
 		}
-		
+
 		for (int local_row = row+1; local_row < m; local_row++)
 		{
 			if(local_row%p != rank)
 				continue;
-			int multiplier = a[local_row][row] / root[row];
+			float multiplier = a[local_row][row] / root[row];
 			for (int j = row; j < n; j++)
 			{
 				a[local_row][j] -= multiplier * root[j];
 			}
 		}
+
 	}
 	
 	// Finalize the MPI environment.
 	MPI_Finalize();
 	
-	display2D(rank, a, m, n);
+	if(!rank)
+		display2D(rank, a, m, n);
 }
