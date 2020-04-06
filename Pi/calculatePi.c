@@ -10,14 +10,14 @@
 
 int main()
 {
-	int i, num_threads, max_threads = 8;
-	long int num_steps, max_steps = 10000000;
+	int i, num_threads, max_threads = 16;
+	long int num_steps, max_steps = 100000000;
 	double x, pi, step, sum;
 
 	double start, stop;
 	printf("Threads\tValue\t\tError\t\t\tTime taken");
 	num_steps = max_steps;
-	for (num_threads = 1; num_threads < max_threads; num_threads++)
+	for (num_threads = 1; num_threads <= max_threads; num_threads++)
 	{
 		sum = 0.0;
 		start = omp_get_wtime();
