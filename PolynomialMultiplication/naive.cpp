@@ -1,9 +1,10 @@
 /**
- * g++ -pthread naive.cpp && ./a.out
+ * g++ -pthread -fopenmp naive.cpp && ./a.out <n> <numThreads>
  **/
-#include<iostream>
-#include<stdlib.h>
+#include <iostream>
+#include <stdlib.h>
 #include <pthread.h>
+#include <omp.h>
 
 #define MAX 10
 #define debug(x) cerr<<#x<<" = "<<x<<endl;
@@ -56,7 +57,8 @@ Block *blocks = new Block[10];
 
 int main(int argc, char *argv[])
 {
-	int n = 10, numThreads = 5, status;
+	int n = atoi(argv[1]), numThreads = atoi(argv[2]), status;
+	double start, stop;
 	int *coefficient1 = new int[n]();
 	int *coefficient2 = new int[n]();
 	int *final_result = new int[n + n - 1]();
@@ -65,11 +67,12 @@ int main(int argc, char *argv[])
 	initialize(coefficient1, n);
 	initialize(coefficient2, n);
 
-	cout<<"Polynomial 1 : ";
-	display(coefficient1, n);
-	cout<<"Polynomial 2 : ";
-	display(coefficient2, n);
+	// cout<<"Polynomial 1 : ";
+	// display(coefficient1, n);
+	// cout<<"Polynomial 2 : ";
+	// display(coefficient2, n);
 
+	start = omp_get_wtime();
 	pthread_t threads[numThreads];
 
 	for (int i = 0; i < numThreads; i++)
@@ -93,6 +96,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	for (int i = 0; i < numThreads; i++)
+	{
+		pthread_join(threads[i], NULL);
+	}
+
 	// Add up the results from each thread to obtain final result
 	for (int i = 0; i < numThreads; i++)
 	{
@@ -102,8 +110,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	display(final_result, n+n-1);
+	// display(final_result, n+n-1);
 
+	stop = omp_get_wtime();
+	cout << stop - start << endl;
 	pthread_exit(NULL);
 	return 0;
 }
