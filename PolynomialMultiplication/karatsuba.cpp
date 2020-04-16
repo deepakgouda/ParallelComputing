@@ -1,5 +1,5 @@
 /**
- * g++ -pthread naive.cpp && ./a.out
+ * g++ -pthread -fopenmp karatsuba.cpp && ./a.out
  **/
 #include <iostream>
 #include <stdlib.h>
