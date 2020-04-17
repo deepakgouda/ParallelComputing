@@ -56,18 +56,54 @@ void display(complex<double> *coefficients, int n)
 	std::cout << endl;
 }
 
+// Compute fft of the coefficient vector sequentially
+complex<double> *fftSequential(complex<double> *coefficient, int n, bool inverse = false)
+{
+	complex<double> *result = new complex<double>[n]();
+	if (n == 1)
+	{
+		result[0] = coefficient[0];
+		return result;
+	}
+
+	// Obtain even and odd coefficients
+	complex<double> *even = new complex<double>[n / 2]();
+	complex<double> *odd = new complex<double>[n / 2]();
+
+	for (int i = 0; i < n / 2; i++)
+	{
+		even[i] = coefficient[2 * i];
+		odd[i] = coefficient[2 * i + 1];
+	}
+
+	// If we need to compute Inverse FFT, the flag calculates the complex conjugate
+	double flag = (inverse) ? -1 : 1;
+	complex<double> w = 1, wi = exp(flag * (double)2 * 1i * PI / (double)n);
+
+	// Recursively compute even and odd fft
+	complex<double> *res0 = fftSequential(even, n / 2, inverse);
+	complex<double> *res1 = fftSequential(odd, n / 2, inverse);
+
+	for (int i = 0; i < n / 2; i++)
+	{
+		result[i] = (res0[i] + w * res1[i]);
+		result[n / 2 + i] = (res0[i] - w * res1[i]);
+		w *= wi;
+	}
+	return result;
+}
+
 // Compute fft of the coefficient vector recursively
 void *fft(void *block_h)
 {
 	Block *block = (Block *)block_h;
-	// if(block -> inverse)
-	// 	printf("True\n");
 	int n = block -> n;
 	block -> coefficientFFT = new complex<double>[n]();
 
-	if(n == 1)
+	// If n <= 128, we perform sequential computation
+	if(n <= 128)
 	{
-		block -> coefficientFFT[0] = block -> coefficient[0];
+		block -> coefficientFFT = fftSequential(block -> coefficient, n, block -> inverse);
 		return nullptr;
 	}
 	
@@ -80,11 +116,6 @@ void *fft(void *block_h)
 		even -> coefficient[i] = block -> coefficient[2 * i];
 		odd -> coefficient[i] = block -> coefficient[2 * i + 1];
 	}
-
-	// If we need to compute Inverse FFT, the flag calculates the complex conjugate
-	double flag = (block -> inverse)?-1:1;
-	complex<double> w = 1, theta = 2*PI/n, wi;
-	wi = cos(theta) + 1i * sin(theta) * (double)flag;
 
 	pthread_t threads[2];
 	for (int i = 0; i < 2; i++)
@@ -100,6 +131,10 @@ void *fft(void *block_h)
 		pthread_join(threads[i], NULL);
 	}
 
+	// If we need to compute Inverse FFT, the flag calculates the complex conjugate
+	double flag = (block -> inverse)?-1:1;
+	complex<double> w = 1, theta = 2*PI/n, wi;
+	wi = cos(theta) + 1i * sin(theta) * (double)flag;
 	for (int i = 0; i < n/2; i++)
 	{
 		block -> coefficientFFT[i] = (even -> coefficientFFT[i] + w * odd -> coefficientFFT[i]);
@@ -168,7 +203,7 @@ int main(int argc, char *argv[])
 	}
 
 	stop = omp_get_wtime();
-	cout<<stop - start<<endl;
 	// display(result->coefficientFFT, 2 * n - 1);
+	cout<<stop - start<<endl;
 	return 0;
 }
