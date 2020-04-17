@@ -1,9 +1,10 @@
 /**
- * g++ -fopenmp karatsuba.cpp && ./a.out
+ * g++ -pthread -fopenmp karatsuba.cpp && ./a.out
  **/
 #include <iostream>
 #include <stdlib.h>
 #include <omp.h>
+#include <pthread.h>
 
 #define MAX 10
 #define debug(x) cerr << #x << " = " << x << endl;
@@ -44,7 +45,7 @@ void *polyMultiplication(void *block_h)
 	int n = block -> n;
 
 	// If n is less than 20, perform naive computation and return result
-	if (n <= 20)
+	if (n <= 128)
 	{
 		block->result = new int[2*n-1]();
 		for (int i = 0; i < n; i++)
@@ -80,9 +81,19 @@ void *polyMultiplication(void *block_h)
 	allBlocks[2].coefficient1 = &(block->coefficient1[n/2]);
 	allBlocks[2].coefficient2 = &(block->coefficient2[n/2]);
 
+	pthread_t threads[3];
+	pthread_attr_t attr[3];
+
 	for (int i = 0; i < 3; i++)
 	{
-        polyMultiplication((void *)&allBlocks[i]);
+		pthread_attr_init(&attr[i]);
+		pthread_attr_setdetachstate(&attr[i], PTHREAD_CREATE_JOINABLE);
+		pthread_create(&threads[i], &attr[i], polyMultiplication, (void *)&allBlocks[i]);
+	}
+	
+	for (int i = 0; i < 3; i++)
+	{
+		pthread_join(threads[i], NULL);
 	}
 
 	block->result = new int[2*n-1]();

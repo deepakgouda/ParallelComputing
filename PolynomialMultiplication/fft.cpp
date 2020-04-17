@@ -1,11 +1,12 @@
 /**
- * g++ fft.cpp && ./a.out
+ * g++ -fopenmp fft.cpp && ./a.out
  **/
 
 #include <iostream>
 #include <complex>
 #include <cmath>
 #include <stdlib.h>
+#include <omp.h>
 #include <iomanip>
 
 #define MAX 10
@@ -73,13 +74,13 @@ complex<double> *fft(complex<double> *coefficient, int n, bool inverse=false)
 
 int main(int argc, char *argv[])
 {
-	int n = 16;
+	int n = 16; double start, stop;
 
 	complex<double> *coefficient1 = new complex<double>[2*n]();
 	complex<double> *coefficient2 = new complex<double>[2*n]();
 
 	srand(7);
-	cout << fixed << setprecision(0);
+	cout << fixed << setprecision(8);
 	
 	initialize(coefficient1, n);
 	initialize(coefficient2, n);
@@ -88,6 +89,7 @@ int main(int argc, char *argv[])
 	complex<double> *coeff2FFT = new complex<double>[2*n]();
 	complex<double> *resultFFT = new complex<double>[2*n]();
 
+	start = omp_get_wtime();
 	// Evaluate polynomial1 and polynomial2 at 2*n points using FFT
 	coeff1FFT = fft(coefficient1, 2 * n);
 	coeff2FFT = fft(coefficient2, 2 * n);
@@ -101,14 +103,16 @@ int main(int argc, char *argv[])
 	complex<double> *result = new complex<double>[n]();
 	result = fft(resultFFT, 2*n, true);
 	
-	display(coefficient1, n);
-	display(coefficient2, n);
+	// display(coefficient1, n);
+	// display(coefficient2, n);
 
 	for (int i = 0; i < 2*n; i++)
 	{
 		result[i]/=(2*n);
 	}
 
-	display(result, 2*n-1);
+	// display(result, 2*n-1);
+	stop = omp_get_wtime();
+	cout << stop - start << endl;
 	return 0;
 }
