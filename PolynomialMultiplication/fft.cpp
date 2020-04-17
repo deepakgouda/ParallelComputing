@@ -1,5 +1,5 @@
 /**
- * g++ -pthread -fopenmp fft.cpp && ./a.out
+ * g++ fft.cpp && ./a.out
  **/
 
 #include <iostream>
@@ -7,8 +7,6 @@
 #include <cmath>
 #include <stdlib.h>
 #include <iomanip>
-#include <omp.h>
-#include <pthread.h>
 
 #define MAX 10
 #define PI 3.14159265358979323846
@@ -18,7 +16,7 @@
 using namespace std;
 
 // Initializes array with random values
-void initialize(int *coefficients, int n)
+void initialize(complex<double> *coefficients, int n)
 {
 	for (int i = 0; i < n; i++)
 	{
@@ -26,43 +24,8 @@ void initialize(int *coefficients, int n)
 	}
 }
 
-// Compute fft of the coefficient vector recursively
-complex<double> *fft(int *coefficient, int n)
-{
-	complex<double> *result = new complex<double>[n]();
-
-	if(n == 1)
-	{
-		result[0] = (double)coefficient[0];
-		return result;
-	}
-	
-	// Obtain even and odd coefficients
-	int *even = new int[n/2]();
-	int *odd = new int[n/2]();
-
-	for (int i = 0; i < n/2; i++)
-	{
-		even[i] = coefficient[2*i];
-		odd[i] = coefficient[2*i + 1];
-	}
-	
-	complex <double> w = 1, wi = exp((double)2*1i*PI/(double)n);
-	// Recursively compute even and odd fft
-	complex <double> *res0 = fft(even, n/2);
-	complex <double> *res1 = fft(odd, n/2);
-
-	for (int i = 0; i < n/2; i++)
-	{
-		result[i] = res0[i] + w*res1[i];
-		result[n/2 + i] = res0[i] - w*res1[i];
-		w*=wi;
-	}
-	return result;
-}
-
 // Displays array
-void display(int *coefficients, int n)
+void display(complex<double> *coefficients, int n)
 {
 	for (int i = 0; i < n; i++)
 	{
@@ -71,15 +34,52 @@ void display(int *coefficients, int n)
 	std::cout << endl;
 }
 
+// Compute fft of the coefficient vector recursively
+complex<double> *fft(complex<double> *coefficient, int n, bool inverse=false)
+{
+	complex<double> *result = new complex<double>[n]();
+	if(n == 1)
+	{
+		result[0] = coefficient[0];
+		return result;
+	}
+	
+	// Obtain even and odd coefficients
+	complex<double> *even = new complex<double>[n/2]();
+	complex<double> *odd = new complex<double>[n/2]();
+
+	for (int i = 0; i < n/2; i++)
+	{
+		even[i] = coefficient[2 * i];
+		odd[i] = coefficient[2 * i + 1];
+	}
+	
+	// If we need to compute Inverse FFT, the flag calculates the complex conjugate
+	double flag = (inverse)?-1:1;
+	complex<double> w = 1, wi = exp(flag*(double)2*1i*PI/(double)n);
+
+	// Recursively compute even and odd fft
+	complex<double> *res0 = fft(even, n/2, inverse);
+	complex<double> *res1 = fft(odd, n/2, inverse);
+
+	for (int i = 0; i < n/2; i++)
+	{
+		result[i] = (res0[i] + w*res1[i]);
+		result[n/2 + i] = (res0[i] - w*res1[i]);
+		w*=wi;
+	}
+	return result;
+}
+
 int main(int argc, char *argv[])
 {
-	int n = 8;
+	int n = 16;
 
-	int *coefficient1 = new int[2*n]();
-	int *coefficient2 = new int[2*n]();
+	complex<double> *coefficient1 = new complex<double>[2*n]();
+	complex<double> *coefficient2 = new complex<double>[2*n]();
 
 	srand(7);
-	cout << fixed << setprecision(3);
+	cout << fixed << setprecision(0);
 	
 	initialize(coefficient1, n);
 	initialize(coefficient2, n);
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 
 	// Evaluate polynomial1 and polynomial2 at 2*n points using FFT
 	coeff1FFT = fft(coefficient1, 2 * n);
-	coeff2FFT = fft(coefficient2, 2*n);
+	coeff2FFT = fft(coefficient2, 2 * n);
 
 	// Elementwise multiplication of polynomials
 	for (int i = 0; i < 2*n; i++)
@@ -98,33 +98,17 @@ int main(int argc, char *argv[])
 		resultFFT[i] = coeff1FFT[i] * coeff2FFT[i];
 	}
 
-	// TODO : Inverse FFT to compute coefficients
-	// complex<double> *result = new complex<double>[n]();
+	complex<double> *result = new complex<double>[n]();
+	result = fft(resultFFT, 2*n, true);
 	
+	display(coefficient1, n);
+	display(coefficient2, n);
+
+	for (int i = 0; i < 2*n; i++)
+	{
+		result[i]/=(2*n);
+	}
+
+	display(result, 2*n-1);
 	return 0;
 }
-
-// void VanderMond(complex<double> **V, complex<double> **invV, int n)
-// {
-// 	double val;
-// 	for (int j = 0; j < n; j++)
-// 	{
-// 		for (int k = 0; k < n; k++)
-// 		{
-// 			val = 2 * j * k * PI / n;
-// 			V[j][k] = std::cos(val) + 1i * std::sin(val); // exp(i*2*pi/n*j*k)
-// 			invV[j][k] = std::cos(val) - 1i * std::sin(val);
-// 		}
-// 	}
-// }
-
-// complex<double> *V[n];
-// complex<double> *invV[n];
-
-// for (int i = 0; i < n; i++)
-// {
-// 	V[i] = new complex<double>[n]();
-// 	invV[i] = new complex<double>[n]();
-// }
-
-// VanderMond(V, invV, n);

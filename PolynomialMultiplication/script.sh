@@ -1,6 +1,6 @@
 echo '' > dat1.txt
 echo '' > dat2.txt
-# echo '' > dat3.txt
+echo '' > dat3.txt
 
 g++ -pthread -fopenmp naive.cpp
 for i in {1..100};
@@ -12,6 +12,12 @@ g++ -pthread -fopenmp karatsuba.cpp
 for i in {1..100};
 do
     ./a.out $((100*i)) >> dat2.txt;
+done
+
+g++ -std=c++17 -pthread -fopenmp fftParallel.cpp
+for i in {1..100};
+do
+    ./a.out $((100*i)) >> dat3.txt;
 done
 
 python plot.py
