@@ -34,3 +34,5 @@
 .vscode
 dat?.txt
 plot.png
+backup/
+backup/*
