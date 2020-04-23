@@ -2,13 +2,17 @@
 #include <deque>
 #include <omp.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+
+#define MAX 10
+
 using namespace std;
 
 typedef struct Block
 {
-	int n;
+	unsigned int n;
 	public:
 	Block(int n)
 	{
@@ -16,40 +20,41 @@ typedef struct Block
 	}
 }Block;
 
-double start, timeout;
-int maxOps;
+double start, timeout, stop;
 
 class Queue
 {
 	deque <Block> pipe;
 	public:
 	int lock = 1;
-	int opsLock = 1;
-	int numOps = 0;
-	unsigned int microseconds = 500000;
+	int totalOps = 0;
+	int maxSize = 5;
 
 	void push(Block b)
 	{
+		// Wait if the queue is full
+		while (pipe.size() == maxSize);
+
 		pipe.push_back(b);
-		usleep(microseconds);
 		
-		while(opsLock != 1);
-		opsLock = 0;
-		printf("%02d : Block pushed\n", numOps);
-		numOps++;
-		opsLock = 1;
+		printf("%02.7f : Block pushed %d\n", omp_get_wtime()-start, b.n);
 	}
 	
-	void pop()
+	int pop()
 	{
-		pipe.pop_front();
-		usleep(microseconds);
+		int value;
 
-		while (opsLock != 1);
-		opsLock = 0;
-		printf("%02d : Block popped\n", numOps);
-		numOps++;
-		opsLock = 1;
+		// Wait if the queue is empty
+		while(pipe.empty());
+
+		Block b = pipe.front();
+		value = b.n;
+		pipe.pop_front();
+
+		totalOps += b.n;
+
+		printf("%02.7f : Block popped %d\n", omp_get_wtime()-start, value);
+		return value;
 	}
 };
 
@@ -57,20 +62,28 @@ Queue *q = new Queue;
 
 void *producer(void *v)
 {
-	while(q -> numOps < maxOps)
+	unsigned int producerTimeout = 5 * 100000;
+
+	while ((omp_get_wtime() - start) < timeout)
 	{
-		q -> push(Block(1));
+		q -> push(Block((rand() % MAX) + 1));
+		usleep(producerTimeout);
 	}
 	return nullptr;
 }
 
 void *consumer(void *v)
 {
-	while (q -> numOps < maxOps)
+	int value;
+	unsigned int consumerTimeout;
+
+	while ((omp_get_wtime() - start) < timeout)
 	{
 		while(q -> lock != 1);
 		q -> lock = 0;
-		q -> pop();
+		value = q -> pop();
+		consumerTimeout = value * 100000;
+		usleep(consumerTimeout);
 		q -> lock = 1;
 	}
 	return nullptr;
@@ -79,8 +92,8 @@ void *consumer(void *v)
 int main(int argc, char *argv[])
 {
 	int p = 4;
-	timeout = 0.0004;
-	maxOps = 1;
+	srand(7);
+	timeout = 5;
 	start = omp_get_wtime();
 
 	pthread_t threads[p];
@@ -97,5 +110,11 @@ int main(int argc, char *argv[])
 	{
 		pthread_join(threads[i], NULL);
 	}
+
+	stop = omp_get_wtime();
+
+	printf("Total operations = %d\n", q -> totalOps);
+	printf("Total time = %lf seconds\n", stop-start);
+	printf("Throughput = %lf\n", (double)(q -> totalOps)/(stop-start));
 	return 0;
 }
