@@ -32,7 +32,7 @@ double start, timeout, stop;
 
 // A stacked queue implementation which consists of n number of
 // queues of length count. Corressponding to each queue segment
-// we have two mutexes produecrLock and consumerLock.
+// we have two mutexes producerLock and consumerLock.
 class Queue
 {
 	vector<vector<Block>> pipe;
