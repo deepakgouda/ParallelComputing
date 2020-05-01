@@ -1,3 +1,7 @@
+/**
+ * g++ -fopenmp fsm.cpp && ./a.out <|w|>
+ */
+
 #include <iostream>
 #include <vector>
 #include <unordered_set>
@@ -9,6 +13,7 @@
 
 using namespace std;
 
+// Transition table of the DFA
 int delta[row][col] =
 	{{1, 5},
 	 {2, 5},
@@ -17,16 +22,18 @@ int delta[row][col] =
 	 {1, 5},
 	 {5, 5}};
 
+// Set of accept states
 unordered_set <int> acceptStates;
 
-vector < vector <int> > finalStates;
-
+// Processes the string by taking initial state as q0
+// and returns true if final state is in accpet states set
 bool run(string s)
 {
 	int indx = 0, q0 = 0, q;
 	q = q0;
 	while(indx < s.length())
 	{
+		// Perform the transition of state
 		q = delta[q][s[indx]-48];
 		indx++;
 	}
@@ -36,6 +43,7 @@ bool run(string s)
 		return false;
 }
 
+// Generate string of pattern (0011)* of length n
 string getPatternString(long n)
 {
 	string s = "";
@@ -50,10 +58,14 @@ string getPatternString(long n)
 
 int main(int argc, char *argv[])
 {
+	// Accept length of string from system arguments
 	long n = (long)atoi(argv[1]);
+
+	// Generate string of required pattern
 	string s = getPatternString(n);
 	double start, stop;
-	
+
+	// Mark q4 as accept state
 	acceptStates.insert(4);
 
 	start = omp_get_wtime();
