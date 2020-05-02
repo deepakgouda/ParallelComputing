@@ -1,6 +1,10 @@
 /**
- * g++ -pthread -fopenmp fsmParallel.cpp && ./a.out <|w|> <numProcesses>
- */
+ * g++ -pthread -fopenmp fsmParallel.cpp && ./a.out <|w|> <k> <|S|> <p>
+ * where, w = input word
+ * 		  k = number of states
+ * 		  S = set of alphabets
+ * 		  p = number of threads
+ */ 
 
 #include <iostream>
 #include <vector>
@@ -8,19 +12,22 @@
 #include <omp.h>
 
 #define debug(x) cerr << #x << " = " << x << endl;
-#define row 6
-#define col 2
 
 using namespace std;
 
 // Transition table of the DFA
-int delta[row][col] =
+/** Use this transition state table to recognise (0011)*
+ * int delta[row][col] =
 	{{1, 5},
 	 {2, 5},
 	 {5, 3},
 	 {5, 4},
 	 {1, 5},
 	 {5, 5}};
+*/
+
+vector<vector<int>> delta;
+int row, col;
 
 // Set of accept states
 unordered_set<int> acceptStates;
@@ -65,15 +72,14 @@ void *run(void *b)
 	return nullptr;
 }
 
-// Generate string of pattern (0011)* of length n
+// Generate a random string of length n with alphabets
+// taken from a set of size 'col'
 string getPatternString(long n)
 {
 	string s = "";
-	if (n % 4)
-		return s;
-	for (long i = 0; i < n / 4; i++)
+	for (long i = 0; i < n; i++)
 	{
-		s += "0011";
+		s += to_string(rand() % col);
 	}
 	return s;
 }
@@ -82,12 +88,25 @@ int main(int argc, char *argv[])
 {
 	// Accept length of string and number of processes from system arguments
 	long n = (long)atoi(argv[1]);
-	int p = atoi(argv[2]);
+	row = atoi(argv[2]), col = atoi(argv[3]);
+	int p = atoi(argv[4]);
+
+	srand(7);
+	delta.resize(row);
+	for (int i = 0; i < row; i++)
+	{
+		delta[i].resize(col);
+		for (int j = 0; j < col; j++)
+		{
+			delta[i][j] = rand() % row;
+		}
+	}
 
 	// Generate string of required pattern
 	string s = getPatternString(n);
 
 	double start, stop;
+
 	finalStates.resize(p);
 
 	// Mark q4 as accept state
@@ -118,11 +137,12 @@ int main(int argc, char *argv[])
 		q = finalStates[i][q];
 	}
 
-	if (acceptStates.find(q) != acceptStates.end())
-		cout << "Acccepted" << endl;
-	else
-		cout << "Rejected" << endl;
+	// if (acceptStates.find(q) != acceptStates.end())
+	// 	cout << "Acccepted" << endl;
+	// else
+	// 	cout << "Rejected" << endl;
 	stop = omp_get_wtime();
-	cout << stop - start << " seconds" << endl;
+
+	cout << stop - start << endl;
 	return 0;
 }

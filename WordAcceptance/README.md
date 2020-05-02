@@ -15,6 +15,25 @@ As the processes do not know the actual starting state for the particular substr
 
 After all processes have performed their tasks, we match the results to arrive at the actual final state. For the first segment `s0`, we know that initial state is `q0` and the corresponding final state obtained for `q0` by process `P0` will be the initial state for `P1`. We continue this iteration until we reach the final state obtained by `Pk-1` which is the final state for the entire string. This reduction step takes `O(p)` time.
 
-Hence, the total time complexity is `O(k*n/p + p)`.
+Hence, the total time complexity is `O(k*|w|/p + p)`.
 
 > References : [*Implementation of Deterministic Finite Automata on Parallel Computers : Jan Holub, Stanislav Stekr*](https://pdfs.semanticscholar.org/d8db/28d57b0a7f0faa5a5059dc276e4d9e75246f.pdf)
+
+## Analysis
+
+For analysis, we generate a random dfa and a random string by taking `|w|`, `k`, `|S|` and `p` as input parameters where 
+- `w` = input word
+- `k` = number of states
+- `S` = set of Alphabets
+- `p` = number of processes
+
+We study the variation of execution time as a function of increasing `|w|`, `k` and `p`.
+
+![](plot_1.png)
+![](plot_2.png)
+![](plot_3.png)
+
+## Inference
+Theoretically, we should observe an improvement over sequential algorithm only if number of states is less than the number of processes. From plot 2 and 3 we can observe that increasing `k`, keeping `p` constant leads to greater execution time for parallel implementation and increasing `p`, keeping `k` constant leads to lesser execution time. Hence, we can verify the expected behaviour.
+
+The Parallel implementation used, is useful only if number of states is lesser than the number of available processes.

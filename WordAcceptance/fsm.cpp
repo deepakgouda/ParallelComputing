@@ -1,5 +1,8 @@
 /**
- * g++ -fopenmp fsm.cpp && ./a.out <|w|>
+ * g++ -fopenmp fsm.cpp && ./a.out <|w|> <k> <|S|>
+ * where, w = input word
+ * 		  k = number of states
+ * 		  S = set of alphabets
  */
 
 #include <iostream>
@@ -8,19 +11,22 @@
 #include <omp.h>
 
 #define debug(x) cerr<<#x<<" = "<<x<<endl;
-#define row 6
-#define col 2
 
 using namespace std;
 
 // Transition table of the DFA
-int delta[row][col] =
+/** Use this transition state table to recognise (0011)*
+ * int delta[row][col] =
 	{{1, 5},
 	 {2, 5},
 	 {5, 3},
 	 {5, 4},
 	 {1, 5},
 	 {5, 5}};
+*/
+
+vector <vector <int> > delta;
+int row, col;
 
 // Set of accept states
 unordered_set <int> acceptStates;
@@ -43,15 +49,14 @@ bool run(string s)
 		return false;
 }
 
-// Generate string of pattern (0011)* of length n
+// Generate a random string of length n with alphabets
+// taken from a set of size 'col'
 string getPatternString(long n)
 {
 	string s = "";
-	if(n%4)
-		return s;
-	for (long i = 0; i < n / 4; i++)
+	for (long i = 0; i < n; i++)
 	{
-		s+="0011";
+		s+=to_string(rand()%col);
 	}
 	return s;
 }
@@ -60,21 +65,35 @@ int main(int argc, char *argv[])
 {
 	// Accept length of string from system arguments
 	long n = (long)atoi(argv[1]);
+	row = atoi(argv[2]), col = atoi(argv[3]);
+
+	srand(7);
+	delta.resize(row);
+	for (int i = 0; i < row; i++)
+	{
+		delta[i].resize(col);
+		for (int j = 0; j < col; j++)
+		{
+			delta[i][j] = rand()%row;
+		}
+	}
 
 	// Generate string of required pattern
 	string s = getPatternString(n);
+
 	double start, stop;
 
 	// Mark q4 as accept state
 	acceptStates.insert(4);
 
 	start = omp_get_wtime();
-
-	if (run(s))
-		std::cout<<"Acccepted"<<endl;
-	else
-		std::cout<<"Rejected"<<endl;
+	run(s);
+	// if (run(s))
+	// 	std::cout<<"Acccepted"<<endl;
+	// else
+	// 	std::cout<<"Rejected"<<endl;
 	stop = omp_get_wtime();
-	std::cout<<stop - start<<" seconds"<<endl;
+
+	std::cout<<stop - start<<endl;
 	return 0;
 }
